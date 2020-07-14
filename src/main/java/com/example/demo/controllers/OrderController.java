@@ -2,6 +2,8 @@ package com.example.demo.controllers;
 
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -20,32 +22,37 @@ import com.example.demo.model.persistence.repositories.UserRepository;
 @RestController
 @RequestMapping("/api/order")
 public class OrderController {
-	
-	
+
+
 	@Autowired
 	private UserRepository userRepository;
-	
+
 	@Autowired
 	private OrderRepository orderRepository;
-	
-	
+
+	private static final Logger logger  = LoggerFactory.getLogger("splunk.logger");
+
 	@PostMapping("/submit/{username}")
 	public ResponseEntity<UserOrder> submit(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
 		if(user == null) {
+			logger.error("Order request failure: User with username" + username + "not found during");
 			return ResponseEntity.notFound().build();
 		}
+		logger.info("Order request successfully created");
 		UserOrder order = UserOrder.createFromCart(user.getCart());
 		orderRepository.save(order);
 		return ResponseEntity.ok(order);
 	}
-	
+
 	@GetMapping("/history/{username}")
 	public ResponseEntity<List<UserOrder>> getOrdersForUser(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
 		if(user == null) {
+			logger.error("Order request failure: User with username" + username + "not found during CreateOrder request");
 			return ResponseEntity.notFound().build();
 		}
+		logger.info("Found user with username {}", username);
 		return ResponseEntity.ok(orderRepository.findByUser(user));
 	}
 }

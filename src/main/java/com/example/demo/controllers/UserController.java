@@ -8,12 +8,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.*;
 
 import com.example.demo.model.persistence.Cart;
 import com.example.demo.model.persistence.User;
@@ -43,24 +39,35 @@ public class UserController {
 	@GetMapping("/{username}")
 	public ResponseEntity<User> findByUserName(@PathVariable String username) {
 		User user = userRepository.findByUsername(username);
-		return user == null ? ResponseEntity.notFound().build() : ResponseEntity.ok(user);
+		if (user == null){
+			log.error("User not found");
+			return ResponseEntity.notFound().build();
+		} else {
+			return ResponseEntity.ok(user);
+		}
 	}
 	
 	@PostMapping("/create")
 	public ResponseEntity<User> createUser(@RequestBody CreateUserRequest createUserRequest) {
-		User user = new User();
-		user.setUsername(createUserRequest.getUsername());
-		Cart cart = new Cart();
-		cartRepository.save(cart);
-		user.setCart(cart);
-		if (createUserRequest.getPassword().length() < 7 ||
-		!createUserRequest.getPassword().equals(createUserRequest.getConfirmPassword())){
+		try {
+			User user = new User();
+			user.setUsername(createUserRequest.getUsername());
+			Cart cart = new Cart();
+			cartRepository.save(cart);
+			user.setCart(cart);
+			if (createUserRequest.getPassword().length() < 7 ||
+					!createUserRequest.getPassword().equals(createUserRequest.getConfirmPassword())){
+				log.error("Failed to create user..invalid user info");
+				return ResponseEntity.badRequest().build();
+			}
+			user.setPassword(bCryptPasswordEncoder.encode(createUserRequest.getPassword()));
+			userRepository.save(user);
+			log.info("successfully saved user");
+			return ResponseEntity.ok(user);
+		} catch (Exception ex){
+			log.error("Failed to create user with error" + ex.getLocalizedMessage());
 			return ResponseEntity.badRequest().build();
 		}
-		user.setPassword(bCryptPasswordEncoder.encode(createUserRequest.getPassword()));
-		userRepository.save(user);
-		log.info("successfully saved user");
-		return ResponseEntity.ok(user);
 	}
 	
 }

@@ -1,5 +1,7 @@
 package com.example.demo;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
@@ -13,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 @SpringBootApplication(exclude = {SecurityAutoConfiguration.class}) //disable default security because we need to do JWT implementation
 public class SareetaApplication {
 
+	Logger logger = LoggerFactory.getLogger("splunk.logger");
 	public static void main(String[] args) {
 		SpringApplication.run(SareetaApplication.class, args);
 	}
@@ -20,6 +23,7 @@ public class SareetaApplication {
 
 	@Bean
 	BCryptPasswordEncoder getPasswordEncoder(){
+		logger.info("This is a test event for Logback test");
 		return new BCryptPasswordEncoder();
 	}
 

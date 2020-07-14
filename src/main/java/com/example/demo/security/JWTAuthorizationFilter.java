@@ -2,6 +2,9 @@ package com.example.demo.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
+import com.example.demo.utils.JwtUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
@@ -14,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 
 import static com.example.demo.security.SecurityConstants.*;
 
@@ -28,32 +32,31 @@ public class JWTAuthorizationFilter extends BasicAuthenticationFilter {
         super(authenticationManager);
     }
 
+    Logger logger = LoggerFactory.getLogger(BasicAuthenticationFilter.class);
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain) throws IOException, ServletException {
-       String header = request.getHeader(HEADER_STRING);
-
-       if (header == null || !header.startsWith(TOKEN_PREFIX)){
+       //all other modes of authentication that are not bearer. e.g basic auth
+        logger.info("authentication filter enabled");
+       if (JwtUtils.isBasicAuth(request)){
            chain.doFilter(request, response);
-           return;
+       } else {
+           UsernamePasswordAuthenticationToken authenticationToken = getAuthentication(request);
+           SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+           chain.doFilter(request, response);
        }
-
-       UsernamePasswordAuthenticationToken authenticationToken = getAuthentication(request);
-       SecurityContextHolder.getContext().setAuthentication(authenticationToken);
-       chain.doFilter(request, response);
     }
 
     private UsernamePasswordAuthenticationToken getAuthentication(HttpServletRequest request){
-        String token = request.getHeader(HEADER_STRING);
-        if (token != null){
-            String user = JWT.require(Algorithm.HMAC512(SECRET.getBytes()))
-                    .build()
-                    .verify(token)
-                    .getSubject();
-            if (user != null){
-                return new UsernamePasswordAuthenticationToken(user, null, new ArrayList<>());
+        String header = request.getHeader(HEADER_STRING);
+        boolean isValidToken = JwtUtils.isvalidHeader(header); //checks that the token is available and has a valid signature
+        if (isValidToken){
+            String token = header.replace(TOKEN_PREFIX, "");
+            if (JwtUtils.isvalidToken(token)){
+                String user = JwtUtils.getSubject(token).get();
+                return new UsernamePasswordAuthenticationToken(user, null, Collections.emptyList());
             }
-            return null;
         }
         return null;
     }
