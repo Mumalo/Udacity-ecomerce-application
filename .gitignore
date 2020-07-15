@@ -3,7 +3,7 @@
 .settings/
  
 # Intellij
-.idea/
+.idea
 *.iml
 *.iws
  
@@ -12,4 +12,4 @@
  
 # Maven
 log/
-target/
+target
