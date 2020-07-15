@@ -1,8 +1,0 @@
--------------------------------------------------------------------------------
-Test set: com.example.demo.SareetaApplicationTests
--------------------------------------------------------------------------------
-Tests run: 1, Failures: 0, Errors: 1, Skipped: 0, Time elapsed: 0.451 s <<< FAILURE! - in com.example.demo.SareetaApplicationTests
-contextLoads(com.example.demo.SareetaApplicationTests)  Time elapsed: 0.002 s  <<< ERROR!
-java.lang.IllegalStateException: Failed to load ApplicationContext
-Caused by: java.lang.ClassCastException: org.apache.logging.log4j.simple.SimpleLoggerContext cannot be cast to org.apache.logging.log4j.core.LoggerContext
-
